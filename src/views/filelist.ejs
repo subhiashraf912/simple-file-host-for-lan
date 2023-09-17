@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>File List</title>
+  </head>
+  <body>
+    <h1>File List</h1>
+    <p>Folder Path: <%= folder %></p>
+    <p>Port: <%= port %></p>
+    <ul>
+      <% files.forEach(file => { %>
+      <li><a href="/download/<%= file %>"><%= file %></a></li>
+      <% }); %>
+    </ul>
+  </body>
+</html>

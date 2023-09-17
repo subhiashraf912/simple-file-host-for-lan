@@ -1,33 +1,64 @@
+const { app, BrowserWindow, ipcMain } = require("electron");
 const express = require("express");
 const path = require("path");
-const app = express();
-const port = 3000;
 const fs = require("fs");
-// Serve static files from a specific directory on your local PC
-const localFilesDirectory = "uploads"; // Replace with the actual path to your files
+const bodyParser = require("body-parser");
 
-app.use("/uploads", express.static(localFilesDirectory));
+// Create an Express app (your existing Node.js server)
+const expressApp = express();
+expressApp.use(bodyParser.urlencoded({ extended: true }));
 
-// Define a route to handle file downloads
-app.get("/download/:filename", (req, res) => {
-  const { filename } = req.params;
-  const filePath = path.join(localFilesDirectory, filename);
+// Set up routes and functionality (your existing server routes)
 
-  // Check if the file exists
-  if (!fs.existsSync(filePath)) {
-    res.status(404).send("File not found");
+// Create an Electron window to display the UI
+let mainWindow;
+
+function createWindow() {
+  mainWindow = new BrowserWindow({
+    width: 400,
+    height: 300,
+    webPreferences: {
+      nodeIntegration: true,
+    },
+  });
+
+  // Load the HTML file
+  mainWindow.loadFile("index.html");
+}
+
+app.on("ready", createWindow);
+
+// Start the Express server when the form is submitted
+expressApp.post("/startserver", (req, res) => {
+  const { port, folder } = req.body;
+  const localFilesDirectory = folder;
+
+  // Check if the folder exists
+  if (!fs.existsSync(localFilesDirectory)) {
+    res.status(404).send("Folder not found");
     return;
   }
 
-  // Set the appropriate headers for the response
-  res.setHeader("Content-Disposition", `attachment; filename=${filename}`);
-  res.setHeader("Content-Type", "application/octet-stream");
+  const files = fs.readdirSync(localFilesDirectory);
 
-  // Create a read stream from the file and pipe it to the response
-  const fileStream = fs.createReadStream(filePath);
-  fileStream.pipe(res);
+  res.render("filelist", { files, folder, port }); // Include folder in the object
 });
 
-app.listen(port, () => {
-  console.log(`File hosting app listening at http://localhost:${port}`);
+// Quit the app when all windows are closed
+app.on("window-all-closed", () => {
+  if (process.platform !== "darwin") {
+    app.quit();
+  }
+});
+
+app.on("activate", () => {
+  if (mainWindow === null) {
+    createWindow();
+  }
+});
+
+// Listen for an event from the Express server
+ipcMain.on("server-started", (event, port) => {
+  // Do something when the server has started, e.g., display a message
+  mainWindow.webContents.send("server-started", port);
 });

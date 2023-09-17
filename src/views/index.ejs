@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>File Hosting App</title>
+  </head>
+  <body>
+    <h1>File Hosting App</h1>
+    <form action="/listfiles" method="POST">
+      <label for="folder">Folder Path:</label>
+      <input type="text" id="folder" name="folder" value="uploads" />
+      <br />
+      <label for="port">Port:</label>
+      <input type="text" id="port" name="port" value="3000" />
+      <br />
+      <button type="submit">List Files</button>
+    </form>
+  </body>
+</html>
